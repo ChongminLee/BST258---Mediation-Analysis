@@ -332,7 +332,7 @@ ggplot(sim_results, aes(x = Uconfounding_prob)) +
   theme(legend.position = "bottom")
 ```
 
-**Interpretation of the Simulation Results**
+**Interpretation of the Simulation Results Plot**
 
 The simulation plot above illustrates the structural validity of the standard Mediation Formula versus the non-parametric bounds proposed by Andrews and Didelez (2021) under varying probabilities of the unmeasured confounder ($\theta_U$). When $\theta_U$ is exactly $0$ or $1$, the unmeasured patient inclination $U$ becomes a deterministic constant, effectively neutralizing the recanting witness effect. Consequently, the cross-world independence assumption strictly holds, and the Mediation Formula successfully point-identifies the True NDE, as evidenced by the perfect convergence of the estimators at the extreme ends of the x-axis.
 
