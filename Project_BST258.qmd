@@ -147,7 +147,7 @@ evaluate_true_pde_terms <- function(n_pop = 5000000) {
 ```
 
 ```{r}
-set.seed(42)
+set.seed(258)
 
 # Evaluate the true nested counterfactuals over a massive population
 true_pde_breakdown <- evaluate_true_pde_terms(n_pop = 5000000)
@@ -202,7 +202,7 @@ evaluate_mediation_formula_terms <- function(dat, a = 1, a_prime = 0) {
 ```
 
 ```{r}
-set.seed(42)
+set.seed(258)
 
 # Generate a massive population
 pop_data <- generate_full_river_blindness(n = 5000000)
@@ -217,9 +217,118 @@ for (name in names(mf_breakdown)) {
 ```
 :::
 
-## 4. Discrepancy between the mediation formula and the true PDE
-Under different Uconfounding_prob, draw the curve. Note that when Uconfounding_prob is either 0 or 1, U is a constant and can be ignored. This makes the cross-world independence true, to the mediation formula and the true PDE will agree.
+## 4. Discrepancy Between the Mediation Formula and the True PDE
 
-## 5 Efficient Estimation of the Mediation Formula Target
+:::{.callout-note title="Evaluating Discrepancy Across Confounding Strengths"}
+To understand how the cross-world independence assumption impacts the Mediation Formula, we evaluate the True PDE and the Mediation Formula PDE across a spectrum of `Uconfounding_prob` values from $0$ to $1$. 
 
+When `Uconfounding_prob` is exactly $0$ or $1$, the unmeasured confounder $U$ becomes a constant. Consequently, the mediator-outcome confounding disappears, cross-world independence strictly holds, and the Mediation Formula correctly identifies the True PDE. For intermediate probabilities (e.g., $0.5$), the cross-world independence assumption is violated due to the recanting witness effect, and a discrepancy emerges between the true counterfactual effect and the observational target.
+:::
+
+## 5. Bounding the NDE (Andrews & Didelez)
+
+:::{.callout-note title="Andrews Bounds for NDE (Equation 9 in Andrews and Didelez, 2021)"}
+In the presence of mediator-outcome confounding affected by the exposure (a violation of the cross-world independence assumption), the True NDE cannot be point-identified via the standard Mediation Formula. However, Andrews and Didelez (2021) demonstrate that we can still bound the effect using Fréchet inequalities.
+
+The NDE (or PDE) is defined as $E[Y(1, M(0))] - E[Y(0)]$. 
+Because $Y$ and $M$ are binary, the cross-world expectation expands to:
+$$E[Y(1, M(0))] = P(Y(1, 1)=1, M(0)=1) + P(Y(1, 0)=1, M(0)=0)$$
+
+Under single-world ignorability (which holds in this DGP), we can identify the marginals $P(Y(1, m)=1) = E[Y|A=1, M=m]$ and $P(M(0)=m) = P(M=m|A=0)$. Applying Fréchet inequalities to the unobservable joint distribution, we obtain the bounds (Equation 9):
+
+**Lower Bound:**
+$$LB = \sum_{m \in \{0,1\}} \max(0, E[Y|A=1, M=m] + P(M=m|A=0) - 1) - E[Y|A=0]$$
+
+**Upper Bound:**
+$$UB = \sum_{m \in \{0,1\}} \min(E[Y|A=1, M=m], P(M=m|A=0)) - E[Y|A=0]$$
+:::
+
+```{r}
+#| message: false
+#| warning: false
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Function to calculate true PDE, MF PDE, and Andrews bounds for a given U_prob
+evaluate_bounds_over_u <- function(u_prob, n_pop = 1000000) {
+  # 1. simulate the data
+  U <- rbinom(n_pop, size = 1, prob = u_prob)
+  A <- rbinom(n_pop, size = 1, prob = 0.5)
+  S <- A
+  
+  prob_M <- ifelse(A == 1, 0.5, 0.1 + 0.8 * U)
+  M <- rbinom(n_pop, size = 1, prob = prob_M)
+  
+  prob_R <- ifelse(S == 1 & M == 1, 0.1 + 0.8 * U, 0)
+  R <- rbinom(n_pop, size = 1, prob = prob_R)
+  
+  prob_Y <- ifelse(M == 0 & R == 0, 0.4,
+            ifelse(M == 1 & R == 0, 0.8, 0.1))
+  Y <- rbinom(n_pop, size = 1, prob = prob_Y)
+  
+  dat <- data.frame(A = A, M = M, Y = Y)
+  
+  # 2. True PDE Calculation (Cross-World)
+  M0 <- rbinom(n_pop, size = 1, prob = 0.1 + 0.8 * U)
+  R_a0_M0 <- rep(0, n_pop)
+  Y_a0_M0 <- rbinom(n_pop, size = 1, prob = ifelse(M0 == 0 & R_a0_M0 == 0, 0.4,
+                                            ifelse(M0 == 1 & R_a0_M0 == 0, 0.8, 0.1)))
+  
+  prob_R_a1_M0 <- ifelse(M0 == 1, 0.1 + 0.8 * U, 0)
+  R_a1_M0 <- rbinom(n_pop, size = 1, prob = prob_R_a1_M0)
+  Y_a1_M0 <- rbinom(n_pop, size = 1, prob = ifelse(M0 == 0 & R_a1_M0 == 0, 0.4,
+                                            ifelse(M0 == 1 & R_a1_M0 == 0, 0.8, 0.1)))
+  
+  true_pde <- mean(Y_a1_M0) - mean(Y_a0_M0)
+  
+  # 3. Mediation Formula (MF) Target
+  P_M1_a0 <- mean(dat$M[dat$A == 0] == 1)
+  P_M0_a0 <- mean(dat$M[dat$A == 0] == 0)
+  
+  E_Y_a1_m1 <- mean(dat$Y[dat$A == 1 & dat$M == 1])
+  E_Y_a1_m0 <- mean(dat$Y[dat$A == 1 & dat$M == 0])
+  E_Y_a0    <- mean(dat$Y[dat$A == 0])
+  
+  mf_pde <- (E_Y_a1_m1 * P_M1_a0 + E_Y_a1_m0 * P_M0_a0) - E_Y_a0
+  
+  # 4. Andrews Bounds Calculation
+  cross_world_LB <- max(0, E_Y_a1_m1 + P_M1_a0 - 1) + max(0, E_Y_a1_m0 + P_M0_a0 - 1)
+  cross_world_UB <- min(E_Y_a1_m1, P_M1_a0) + min(E_Y_a1_m0, P_M0_a0)
+  
+  bound_LB <- cross_world_LB - E_Y_a0
+  bound_UB <- cross_world_UB - E_Y_a0
+  
+  return(data.frame(
+    Uconfounding_prob = u_prob,
+    True_PDE = true_pde,
+    MF_PDE = mf_pde,
+    Bound_Lower = bound_LB,
+    Bound_Upper = bound_UB
+  ))
+}
+
+# run simulation across different probabilities of U
+set.seed(258)
+u_probs_seq <- seq(0, 1, by = 0.05)
+sim_results <- do.call(rbind, lapply(u_probs_seq, evaluate_bounds_over_u, n_pop = 1000000))
+
+# plot the discrepancy and bounds
+ggplot(sim_results, aes(x = Uconfounding_prob)) +
+  geom_ribbon(aes(ymin = Bound_Lower, ymax = Bound_Upper, fill = "Andrews Bounds"), alpha = 0.2) +
+  geom_line(aes(y = True_PDE, color = "True NDE (PDE)"), size = 1.2) +
+  geom_line(aes(y = MF_PDE, color = "Mediation Formula Target"), size = 1, linetype = "dashed") +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "True NDE vs. Mediation Formula & Andrews Bounds",
+    subtitle = "Evaluating structural validity across unmeasured confounding strengths",
+    x = bquote("Probability of Unmeasured Confounder ("*theta[U]*")"),
+    y = "Natural Direct Effect (NDE/PDE)",
+    color = "Estimator",
+    fill = "Bounds"
+  ) +
+  scale_color_manual(values = c("True NDE (PDE)" = "#1f78b4", "Mediation Formula Target" = "#e31a1c")) +
+  scale_fill_manual(values = c("Andrews Bounds" = "grey30")) +
+  theme(legend.position = "bottom")
+```
 
