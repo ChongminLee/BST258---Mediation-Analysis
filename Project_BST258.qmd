@@ -1,0 +1,225 @@
+---
+title: "Project_BST258"
+format: html
+---
+
+## 1. Theoretical Setup of the River Blindness DGP
+
+:::{.callout-note title="Causal Diagram Specification"}
+Based on the Robins, Richardson, and Shpitser (2022) River Blindness example, we define a DGP based on their SWIG example that violates the cross-world independence assumption.
+
+The authors consider the following hypothetical scenario regarding a medically underserved area near a river suffering from river blindness, that can be possibly intervened by the drug Ivermectin. $A$ is the indicator of being randomized into the study, $M$ is the indciator of being treated with Ivermectin. (Be aware that $A$ is not the "treatment" in drug exposure sense. Drug exposure is the mediator.) Ivermectin is assumed to be commercially available, so $A=0$ group can still self-treat Ivermectin in their own discretion. If $A=1$, then $M(a=1)$ is independent to the unmeasured confounder (e.g. inclination to take the drug) because we are randomizing (e.g. determined by random number generation) the drug exposure for this selected group. Because Ivermectin can have side-effects, an immunosuppressive therapy may be required at a nearby clinic established by the investigators. The indicator for immunosuppression is $R$, and $S$ is the indicator of access to the clinic. The patients not selected into $A=1$ do not have access to immmunosuppression nor the clinic, thus $S=0$, $R=0$ for them. $S=1$ iff $A=1$. $U$ is the unmeasured confounder, and the DAG is given in Figure 1-(a). 1-(b) is the SWIG ``template" derived from the DAG. Due to fire, unfortunately, only $(Y, A, M)$ is available to us. If $A$ is determined by random number generator, $U$ cannot affect $A$. Futher, since $A$ determines $S$ completely, there is no arrow between $U$ and $S$. 
+
+
+The variables are:
+$U$: Unmeasured patient inclination to seek medical care.
+$A$: Randomized trial selection ($A=1$ for trial, $A=0$ for observational).
+$S$: Access to the clinic. $S = A$ deterministically.
+$R$: Indicator for the immunosuppressing. If $S=0$, then $R=0$. The converse is not generally true.
+$M$: Ivermectin treatment. 
+$Y$: Diminished vision (1 = worse vision, 0 = no diminished vision).
+
+Because $U$ determines both $M(a=0)$ and $Y(a=1, m=1)$, the cross-world independence assumption $Y(a=1, m) \perp M(a=0)$ is violated. 
+
+![](plots/Fig1.png){width=85%}
+:::
+
+## 2. Specification of the DGP
+:::{.callout-note title="DGP Specification"}
+![](plots/Fig1.png){width=85%}
+
+The above diagram is Figure 12 in Robins et al. (2022). 
+We take all variables to be binary.
+
+Note on notations: $a_0$ means $a=0$, $m_0$ means $m=0$, and $s_0$ means $s=0$. Similarly, $a_1$ means $a=1$ and so on.
+
+Baseline Variables:
+$$P(U = 1) \equiv \theta_U = 0.5$$
+$$P(A = 1) \equiv \theta_A = 0.5$$
+Clinic Access $S(a)$:
+The clinic is deterministic based on trial assignment.
+$$S(a)=a$$
+
+Ivermectin Assignment $M(a,u)$ Counterfactuals:
+
+$$P(M(1, u) = 1) \equiv \theta_{M1} \quad \text{(Randomized)}$$
+$$P(M(0, u) = 1) \equiv \theta_{M0, u} \quad \text{for } u \in \{0, 1\}$$
+
+Immunosuppressive Therapy $R(s, m, u)$:
+$$P(R(0, m, u) = 1) = 0 \quad \text{(No clinic)}$$
+$$P(R(1, 0, u) = 1) = 0 \quad \text{(No Ivermectin, no need)}$$
+$$P(R(1, 1, u) = 1) \equiv \theta_{R, u} \quad \text{for } u \in \{0, 1\}$$
+
+Diminished Vision Outcome $Y(m, r)$:
+$$P(Y(0, 0) = 1) \equiv \theta_{Y, 00} \quad \text{(No Ivermectin = baseline river blindness risk)}$$
+$$P(Y(1, 0) = 1) \equiv \theta_{Y, 10} \quad \text{(Ivermectin taken, no suppression = severe vision loss)}$$
+$$P(Y(1, 1) = 1) \equiv \theta_{Y, 11} \quad \text{(Ivermectin taken, suppressed = preserved vision)}$$
+The state $Y(0, 1)$ is structurally impossible under this DGP (no Ivermectin, then no immunosuppression is needed nor done), as $R=1$ is strictly 0 when $M=0$, so we do not need to parameterize it.
+
+:::
+
+## 3. Generating the Data in R
+```{r}
+Uconfounding_prob <- 0.5
+```
+
+```{r}
+generate_full_river_blindness <- function(n) {
+  # Baseline variables
+  U <- rbinom(n, size = 1, prob = Uconfounding_prob)
+  A <- rbinom(n, size = 1, prob = 0.5)
+  
+  # S: Clinic access is perfectly compliant with A
+  S <- A
+  
+  # M: Ivermectin treatment
+  prob_M <- rep(NA, n)
+  prob_M[A == 1] <- 0.5                     # Randomized in trial
+  prob_M[A == 0] <- 0.1 + 0.8 * U[A == 0]   # Self-selected in observational
+  M <- rbinom(n, size = 1, prob = prob_M)
+  
+  # R: Immunosuppressant 
+  # Only accessible if S=1 AND M=1. If both are true, it depends on U.
+  prob_R <- rep(0, n) 
+  prob_R[S == 1 & M == 1] <- 0.1 + 0.8 * U[S == 1 & M == 1]
+  R <- rbinom(n, size = 1, prob = prob_R)
+  
+  # Y: Diminished vision (Depends STRICTLY on M and R)
+  prob_Y <- rep(NA, n)
+  prob_Y[M == 0 & R == 0] <- 0.4  # Baseline risk (no treatment)
+  prob_Y[M == 1 & R == 0] <- 0.8  # Immune reaction without suppression
+  prob_Y[M == 1 & R == 1] <- 0.1  # Immune reaction mitigated by suppression
+  
+  Y <- rbinom(n, size = 1, prob = prob_Y)
+  
+  return(data.frame(U = U, A = A, S = S, M = M, R = R, Y = Y))
+}
+```
+
+:::{.callout-note title="Calculating the true value of the PDE (or NDE)"}
+$$
+PDE_{a', a} = E[Y(a, M(a')) - Y(a', M(a'))]
+$$
+
+```{r}
+evaluate_true_pde_terms <- function(n_pop = 5000000) {
+  
+  # Generate the population's baseline inclination (U)
+  U <- rbinom(n_pop, size = 1, prob = Uconfounding_prob)
+  
+  # Simulate the counterfactual mediator under a' = 0
+  # Under A=0, patients self-select Ivermectin based on U.
+  prob_M0 <- 0.1 + 0.8 * U
+  M0 <- rbinom(n_pop, size = 1, prob = prob_M0)
+  
+
+  # Simulate Y(a'=0, M(0)) 
+  # S(0) = 0 -> Clinic is closed -> Immunosuppressants (R) are strictly 0
+  R_a0_M0 <- rep(0, n_pop)
+  prob_Y_a0_M0 <- ifelse(M0 == 0 & R_a0_M0 == 0, 0.4,
+                  ifelse(M0 == 1 & R_a0_M0 == 0, 0.8, 0.1))
+  Y_a0_M0 <- rbinom(n_pop, size = 1, prob = prob_Y_a0_M0)
+  
+  # Simulate Y(a=1, M(0)) -> The Cross-World Counterfactual
+  # S(1) = 1 -> Clinic is open -> R depends on M0 and U
+  # R is only taken if the patient has the immune response (M0=1)
+  prob_R_a1_M0 <- ifelse(M0 == 1, 0.1 + 0.8 * U, 0)
+  R_a1_M0 <- rbinom(n_pop, size = 1, prob = prob_R_a1_M0)
+  
+  prob_Y_a1_M0 <- ifelse(M0 == 0 & R_a1_M0 == 0, 0.4,
+                  ifelse(M0 == 1 & R_a1_M0 == 0, 0.8, 0.1))
+  Y_a1_M0 <- rbinom(n_pop, size = 1, prob = prob_Y_a1_M0)
+
+  # Compute Expectations and True PDE
+  E_Y_a1_M0 <- mean(Y_a1_M0)
+  E_Y_a0_M0 <- mean(Y_a0_M0)
+  True_PDE  <- E_Y_a1_M0 - E_Y_a0_M0
+  
+  # Formatting the output cleanly
+  results <- list(
+    `E[Y(a=1, M(0))]` = E_Y_a1_M0,
+    `E[Y(a=0, M(0))]` = E_Y_a0_M0,
+    `True PDE`        = True_PDE
+  )
+  
+  return(results)
+}
+```
+
+```{r}
+set.seed(42)
+
+# Evaluate the true nested counterfactuals over a massive population
+true_pde_breakdown <- evaluate_true_pde_terms(n_pop = 5000000)
+
+# Printout
+for (name in names(true_pde_breakdown)) {
+  cat(sprintf("%-20s: %.4f\n", name, true_pde_breakdown[[name]]))
+}
+```
+
+:::
+
+:::{.callout-note title="Calculating the true value of the mediation formula for PDE (or NDE)"}
+$$
+\text{Mediaton formula for } PDE_{a', a} = \big(\sum_m E[Y|m, a]p(m|a') \big) - E[Y|A=a'].
+$$
+```{r}
+evaluate_mediation_formula_terms <- function(dat, a = 1, a_prime = 0) {
+  
+  # 1. Calculate P(m | a') -> The probability of mediator under reference
+  P_M1_aprime <- mean(dat$M[dat$A == a_prime] == 1)
+  P_M0_aprime <- mean(dat$M[dat$A == a_prime] == 0)
+  
+  # 2. Calculate E[Y | m, a] -> Expected outcome under treatment & mediator
+  E_Y_A_M1 <- mean(dat$Y[dat$A == a & dat$M == 1])
+  E_Y_A_M0 <- mean(dat$Y[dat$A == a & dat$M == 0])
+  
+  # 3. Compute Term 1: sum_m { E[Y|m, a] * p(m|a') }
+  term_1 <- (E_Y_A_M1 * P_M1_aprime) + (E_Y_A_M0 * P_M0_aprime)
+  
+  # 4. Compute Term 2: E[Y | A = a']
+  term_2 <- mean(dat$Y[dat$A == a_prime])
+  
+  # 5. Compute Final PDE
+  PDE_MF <- term_1 - term_2
+  
+  # Formatting the output
+  results <- list(
+    `a`                 = a,
+    `a_prime`           = a_prime,
+    `P(M=1 | A=a')`     = P_M1_aprime,
+    `P(M=0 | A=a')`     = P_M0_aprime,
+    `E[Y | M=1, A=a]`   = E_Y_A_M1,
+    `E[Y | M=0, A=a]`   = E_Y_A_M0,
+    `Term 1 (Sum)`      = term_1,
+    `Term 2 (Baseline)` = term_2,
+    `PDE (MF)`          = PDE_MF
+  )
+  
+  return(results)
+}
+```
+
+```{r}
+set.seed(42)
+
+# Generate a massive population
+pop_data <- generate_full_river_blindness(n = 5000000)
+
+# Evaluate the terms for a'=0 to a=1
+mf_breakdown <- evaluate_mediation_formula_terms(pop_data, a = 1, a_prime = 0)
+
+# Printout
+for (name in names(mf_breakdown)) {
+  cat(sprintf("%-20s: %.4f\n", name, mf_breakdown[[name]]))
+}
+```
+:::
+
+## 4. Discrepancy between the mediation formula and the true PDE
+Under different Uconfounding_prob, draw the curve. Note that when Uconfounding_prob is either 0 or 1, U is a constant and can be ignored. This makes the cross-world independence true, to the mediation formula and the true PDE will agree.
+
+## 5 Efficient Estimation of the Mediation Formula Target
+
+
