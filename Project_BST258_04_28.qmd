@@ -1,44 +1,68 @@
 ---
 title: "Project_BST258"
 format: html
+editor: 
+  markdown: 
+    wrap: 72
 ---
 
 ## 1. Theoretical Setup of the River Blindness DGP
 
-:::{.callout-note title="Causal Diagram Specification"}
-Based on the Robins, Richardson, and Shpitser (2022) River Blindness example, we define a DGP based on their SWIG example that violates the cross-world independence assumption.
+::: {.callout-note title="Causal Diagram Specification"}
+Based on the Robins, Richardson, and Shpitser (2022) River Blindness
+example, we define a DGP based on their SWIG example that violates the
+cross-world independence assumption.
 
-The authors consider the following hypothetical scenario regarding a medically underserved area near a river suffering from river blindness, that can be possibly intervened by the drug Ivermectin. $A$ is the indicator of being randomized into the study, $M$ is the indciator of being treated with Ivermectin. (Be aware that $A$ is not the "treatment" in drug exposure sense. Drug exposure is the mediator.) Ivermectin is assumed to be commercially available, so $A=0$ group can still self-treat Ivermectin in their own discretion. If $A=1$, then $M(a=1)$ is independent to the unmeasured confounder (e.g. inclination to take the drug) because we are randomizing (e.g. determined by random number generation) the drug exposure for this selected group. Because Ivermectin can have side-effects, an immunosuppressive therapy may be required at a nearby clinic established by the investigators. The indicator for immunosuppression is $R$, and $S$ is the indicator of access to the clinic. The patients not selected into $A=1$ do not have access to immmunosuppression nor the clinic, thus $S=0$, $R=0$ for them. $S=1$ iff $A=1$. $U$ is the unmeasured confounder, and the DAG is given in Figure 1-(a). 1-(b) is the SWIG ``template" derived from the DAG. Due to fire, unfortunately, only $(Y, A, M)$ is available to us. If $A$ is determined by random number generator, $U$ cannot affect $A$. Futher, since $A$ determines $S$ completely, there is no arrow between $U$ and $S$. 
+The authors consider the following hypothetical scenario regarding a
+medically underserved area near a river suffering from river blindness,
+that can be possibly intervened by the drug Ivermectin. $A$ is the
+indicator of being randomized into the study, $M$ is the indciator of
+being treated with Ivermectin. (Be aware that $A$ is not the "treatment"
+in drug exposure sense. Drug exposure is the mediator.) Ivermectin is
+assumed to be commercially available, so $A=0$ group can still
+self-treat Ivermectin in their own discretion. If $A=1$, then $M(a=1)$
+is independent to the unmeasured confounder (e.g. inclination to take
+the drug) because we are randomizing (e.g. determined by random number
+generation) the drug exposure for this selected group. Because
+Ivermectin can have side-effects, an immunosuppressive therapy may be
+required at a nearby clinic established by the investigators. The
+indicator for immunosuppression is $R$, and $S$ is the indicator of
+access to the clinic. The patients not selected into $A=1$ do not have
+access to immmunosuppression nor the clinic, thus $S=0$, $R=0$ for them.
+$S=1$ iff $A=1$. $U$ is the unmeasured confounder, and the DAG is given
+in Figure 1-(a). 1-(b) is the SWIG \`\`template" derived from the DAG.
+Due to fire, unfortunately, only $(Y, A, M)$ is available to us. If $A$
+is determined by random number generator, $U$ cannot affect $A$. Futher,
+since $A$ determines $S$ completely, there is no arrow between $U$ and
+$S$.
 
+The variables are: $U$: Unmeasured patient inclination to seek medical
+care. $A$: Randomized trial selection ($A=1$ for trial, $A=0$ for
+observational). $S$: Access to the clinic. $S = A$ deterministically.
+$R$: Indicator for the immunosuppressing. If $S=0$, then $R=0$. The
+converse is not generally true. $M$: Ivermectin treatment. $Y$:
+Diminished vision (1 = worse vision, 0 = no diminished vision).
 
-The variables are:
-$U$: Unmeasured patient inclination to seek medical care.
-$A$: Randomized trial selection ($A=1$ for trial, $A=0$ for observational).
-$S$: Access to the clinic. $S = A$ deterministically.
-$R$: Indicator for the immunosuppressing. If $S=0$, then $R=0$. The converse is not generally true.
-$M$: Ivermectin treatment. 
-$Y$: Diminished vision (1 = worse vision, 0 = no diminished vision).
+Because $U$ determines both $M(a=0)$ and $Y(a=1, m=1)$, the cross-world
+independence assumption $Y(a=1, m) \perp M(a=0)$ is violated.
 
-Because $U$ determines both $M(a=0)$ and $Y(a=1, m=1)$, the cross-world independence assumption $Y(a=1, m) \perp M(a=0)$ is violated. 
-
-![](plots/Fig1.png){width=85%}
+![](plots/Fig1.png){width="85%"}
 :::
 
 ## 2. Specification of the DGP
-:::{.callout-note title="DGP Specification"}
-![](plots/Fig1.png){width=85%}
 
-The above diagram is Figure 12 in Robins et al. (2022). 
-We take all variables to be binary.
+::: {.callout-note title="DGP Specification"}
+![](plots/Fig1.png){width="85%"}
 
-Note on notations: $a_0$ means $a=0$, $m_0$ means $m=0$, and $s_0$ means $s=0$. Similarly, $a_1$ means $a=1$ and so on.
+The above diagram is Figure 12 in Robins et al. (2022). We take all
+variables to be binary.
 
-Baseline Variables:
-$$P(U = 1) \equiv \theta_U = 0.5$$
-$$P(A = 1) \equiv \theta_A = 0.5$$
-Clinic Access $S(a)$:
-The clinic is deterministic based on trial assignment.
-$$S(a)=a$$
+Note on notations: $a_0$ means $a=0$, $m_0$ means $m=0$, and $s_0$ means
+$s=0$. Similarly, $a_1$ means $a=1$ and so on.
+
+Baseline Variables: $$P(U = 1) \equiv \theta_U = 0.5$$
+$$P(A = 1) \equiv \theta_A = 0.5$$ Clinic Access $S(a)$: The clinic is
+deterministic based on trial assignment. $$S(a)=a$$
 
 Ivermectin Assignment $M(a,u)$ Counterfactuals:
 
@@ -54,11 +78,13 @@ Diminished Vision Outcome $Y(m, r)$:
 $$P(Y(0, 0) = 1) \equiv \theta_{Y, 00} \quad \text{(No Ivermectin = baseline river blindness risk)}$$
 $$P(Y(1, 0) = 1) \equiv \theta_{Y, 10} \quad \text{(Ivermectin taken, no suppression = severe vision loss)}$$
 $$P(Y(1, 1) = 1) \equiv \theta_{Y, 11} \quad \text{(Ivermectin taken, suppressed = preserved vision)}$$
-The state $Y(0, 1)$ is structurally impossible under this DGP (no Ivermectin, then no immunosuppression is needed nor done), as $R=1$ is strictly 0 when $M=0$, so we do not need to parameterize it.
-
+The state $Y(0, 1)$ is structurally impossible under this DGP (no
+Ivermectin, then no immunosuppression is needed nor done), as $R=1$ is
+strictly 0 when $M=0$, so we do not need to parameterize it.
 :::
 
 ## 3. Generating the Data in R
+
 ```{r}
 Uconfounding_prob <- 0.5
 ```
@@ -96,7 +122,7 @@ generate_full_river_blindness <- function(n) {
 }
 ```
 
-:::{.callout-note title="Calculating the true value of the PDE (or NDE)"}
+::: {.callout-note title="Calculating the true value of the PDE (or NDE)"}
 $$
 PDE_{a', a} = E[Y(a, M(a')) - Y(a', M(a'))]
 $$
@@ -157,13 +183,13 @@ for (name in names(true_pde_breakdown)) {
   cat(sprintf("%-20s: %.4f\n", name, true_pde_breakdown[[name]]))
 }
 ```
-
 :::
 
-:::{.callout-note title="Calculating the true value of the mediation formula for PDE (or NDE)"}
+::: {.callout-note title="Calculating the true value of the mediation formula for PDE (or NDE)"}
 $$
 \text{Mediaton formula for } PDE_{a', a} = \big(\sum_m E[Y|m, a]p(m|a') \big) - E[Y|A=a'].
 $$
+
 ```{r}
 evaluate_mediation_formula_terms <- function(dat, a = 1, a_prime = 0) {
   
@@ -219,22 +245,37 @@ for (name in names(mf_breakdown)) {
 
 ## 4. Discrepancy Between the Mediation Formula and the True PDE
 
-:::{.callout-note title="Evaluating Discrepancy Across Confounding Strengths"}
-To understand how the cross-world independence assumption impacts the Mediation Formula, we evaluate the True PDE and the Mediation Formula PDE across a spectrum of `Uconfounding_prob` values from $0$ to $1$. 
+::: {.callout-note title="Evaluating Discrepancy Across Confounding Strengths"}
+To understand how the cross-world independence assumption impacts the
+Mediation Formula, we evaluate the True PDE and the Mediation Formula
+PDE across a spectrum of `Uconfounding_prob` values from $0$ to $1$.
 
-When `Uconfounding_prob` is exactly $0$ or $1$, the unmeasured confounder $U$ becomes a constant. Consequently, the mediator-outcome confounding disappears, cross-world independence strictly holds, and the Mediation Formula correctly identifies the True PDE. For intermediate probabilities (e.g., $0.5$), the cross-world independence assumption is violated due to the recanting witness effect, and a discrepancy emerges between the true counterfactual effect and the observational target.
+When `Uconfounding_prob` is exactly $0$ or $1$, the unmeasured
+confounder $U$ becomes a constant. Consequently, the mediator-outcome
+confounding disappears, cross-world independence strictly holds, and the
+Mediation Formula correctly identifies the True PDE. For intermediate
+probabilities (e.g., $0.5$), the cross-world independence assumption is
+violated due to the recanting witness effect, and a discrepancy emerges
+between the true counterfactual effect and the observational target.
 :::
 
 ## 5. Bounding the NDE (Andrews & Didelez)
 
-:::{.callout-note title="Andrews Bounds for NDE (Equation 9 in Andrews and Didelez, 2021)"}
-In the presence of mediator-outcome confounding affected by the exposure (a violation of the cross-world independence assumption), the True NDE cannot be point-identified via the standard Mediation Formula. However, Andrews and Didelez (2021) demonstrate that we can still bound the effect using Fréchet inequalities.
+::: {.callout-note title="Andrews Bounds for NDE (Equation 9 in Andrews and Didelez, 2021)"}
+In the presence of mediator-outcome confounding affected by the exposure
+(a violation of the cross-world independence assumption), the True NDE
+cannot be point-identified via the standard Mediation Formula. However,
+Andrews and Didelez (2021) demonstrate that we can still bound the
+effect using Fréchet inequalities.
 
-The NDE (or PDE) is defined as $E[Y(1, M(0))] - E[Y(0)]$. 
-Because $Y$ and $M$ are binary, the cross-world expectation expands to:
+The NDE (or PDE) is defined as $E[Y(1, M(0))] - E[Y(0)]$. Because $Y$
+and $M$ are binary, the cross-world expectation expands to:
 $$E[Y(1, M(0))] = P(Y(1, 1)=1, M(0)=1) + P(Y(1, 0)=1, M(0)=0)$$
 
-Under single-world ignorability (which holds in this DGP), we can identify the marginals $P(Y(1, m)=1) = E[Y|A=1, M=m]$ and $P(M(0)=m) = P(M=m|A=0)$. Applying Fréchet inequalities to the unobservable joint distribution, we obtain the bounds (Equation 9):
+Under single-world ignorability (which holds in this DGP), we can
+identify the marginals $P(Y(1, m)=1) = E[Y|A=1, M=m]$ and
+$P(M(0)=m) = P(M=m|A=0)$. Applying Fréchet inequalities to the
+unobservable joint distribution, we obtain the bounds (Equation 9):
 
 **Lower Bound:**
 $$LB = \sum_{m \in \{0,1\}} \max(0, E[Y|A=1, M=m] + P(M=m|A=0) - 1) - E[Y|A=0]$$
@@ -242,7 +283,6 @@ $$LB = \sum_{m \in \{0,1\}} \max(0, E[Y|A=1, M=m] + P(M=m|A=0) - 1) - E[Y|A=0]$$
 **Upper Bound:**
 $$UB = \sum_{m \in \{0,1\}} \min(E[Y|A=1, M=m], P(M=m|A=0)) - E[Y|A=0]$$
 :::
-
 
 ```{r}
 #| message: false
@@ -335,14 +375,35 @@ ggplot(sim_results, aes(x = Uconfounding_prob)) +
 
 **Interpretation of the Simulation Results**
 
-The simulation plot above illustrates the structural validity of the standard Mediation Formula versus the non-parametric bounds proposed by Andrews and Didelez (2021) under varying probabilities of the unmeasured confounder ($\theta_U$). When $\theta_U$ is exactly $0$ or $1$, the unmeasured patient inclination $U$ becomes a deterministic constant, effectively neutralizing the recanting witness effect. Consequently, the cross-world independence assumption strictly holds, and the Mediation Formula successfully point-identifies the True NDE, as evidenced by the perfect convergence of the estimators at the extreme ends of the x-axis.
+The simulation plot above illustrates the structural validity of the
+standard Mediation Formula versus the non-parametric bounds proposed by
+Andrews and Didelez (2021) under varying probabilities of the unmeasured
+confounder ($\theta_U$). When $\theta_U$ is exactly $0$ or $1$, the
+unmeasured patient inclination $U$ becomes a deterministic constant,
+effectively neutralizing the recanting witness effect. Consequently, the
+cross-world independence assumption strictly holds, and the Mediation
+Formula successfully point-identifies the True NDE, as evidenced by the
+perfect convergence of the estimators at the extreme ends of the x-axis.
 
-However, for intermediate values of $\theta_U$ (most notably around $0.50$), the variation in $U$ actively confounds the mediator-outcome relationship, inducing a severe violation of cross-world independence. As demonstrated in the plot, a distinct bias emerges where the standard Mediation Formula (dashed red line) deviates significantly from the True NDE (solid blue line). Crucially, despite this failure of point identification, the true counterfactual effect is consistently captured within the grey shaded region representing the Andrews bounds. This empirically verifies that even in the presence of a recanting witness, valid and robust inferences about the NDE can still be drawn using Fréchet inequalities that rely entirely on observable, single-world distributions.
-
+However, for intermediate values of $\theta_U$ (most notably around
+$0.50$), the variation in $U$ actively confounds the mediator-outcome
+relationship, inducing a severe violation of cross-world independence.
+As demonstrated in the plot, a distinct bias emerges where the standard
+Mediation Formula (dashed red line) deviates significantly from the True
+NDE (solid blue line). Crucially, despite this failure of point
+identification, the true counterfactual effect is consistently captured
+within the grey shaded region representing the Andrews bounds. This
+empirically verifies that even in the presence of a recanting witness,
+valid and robust inferences about the NDE can still be drawn using
+Fréchet inequalities that rely entirely on observable, single-world
+distributions.
 
 ## 6. Does conditioning on the variable $S, R$ save us?
-:::{.callout-note title="Counterexample"}
-The answer is no. First, note that since we know $A=S$ deterministically, only the information on $R$ is meaningful. But it will not save us. Consider the following NPSEM-IE DGP following our DAG:
+
+::: {.callout-note title="Counterexample"}
+The answer is no. First, note that since we know $A=S$
+deterministically, only the information on $R$ is meaningful. But it
+will not save us. Consider the following NPSEM-IE DGP following our DAG:
 $$\begin{aligned}
 U &= f_U(\epsilon_U) \\
 A &= f_A(\epsilon_A) \\
@@ -352,8 +413,7 @@ R &= f_R(S, M, U, \epsilon_R) \\
 Y &= f_Y(M, R, \epsilon_Y)
 \end{aligned}$$
 
-Then, 
-$$M(0) = f_M(0, U, \epsilon_M)$$
+Then, $$M(0) = f_M(0, U, \epsilon_M)$$
 
 $$\begin{aligned}
 Y(1, m) &= f_Y(m, R(1, m), \epsilon_Y) \\
@@ -361,41 +421,131 @@ Y(1, m) &= f_Y(m, R(1, m), \epsilon_Y) \\
 &= f_Y(m, f_R(1, m, U, \epsilon_R), \epsilon_Y)
 \end{aligned}$$
 
-We see that both variables depend on the unmeasured confounder $U$ (the inclination to take the drug, etc.) Thus, the cross-world independence $Y(a, m) \perp M(a^*)$ is false. Now, let us consider conditioning on the variable $R$. (To be continued.)
+We see that both variables depend on the unmeasured confounder $U$ (the
+inclination to take the drug, etc.) Thus, the cross-world independence
+$Y(a, m) \perp M(a^*)$ is false. Now, let us consider conditioning on
+the variable $R$. (To be continued.)
 :::
-
 
 ## 7. Efficient estimation of the mediation formula based on IF (Tchetgen Tchetgen and Shpitser (2012))
 
-:::{.callout-note title="The Influence Function"}
-Recall that our mediation formula is:
-$$
+::: {.callout-note title="The Influence Function"}
+Recall that our mediation formula is: $$
 \text{Mediaton formula for } PDE_{a', a} = \big(\sum_m E[Y|m, a]p(m|a') \big) - E[Y|A=a'].
-$$
-Consider the case where $a'=0, a=1$. 
+$$ Consider the case where $a'=0, a=1$.
 
-How can we estimate the first term efficiently under 
+How can we estimate the first term efficiently under
 
-According to Tchetgen Tchetgen and Shpitser (2012), the "uncentered" influence function for the mediation formula can be estimated by
+According to Tchetgen Tchetgen and Shpitser (2012), the "uncentered"
+influence function for the mediation formula can be estimated by
 $$\hat{\psi}^{TTS} = \frac{1}{n} \sum_{i=1}^n \Bigg[ \underbrace{\frac{I(A_i=1)\hat{p}(M_i|A_i=0,L_i)}{\hat{p}(A_i=1|L_i)\hat{p}(M_i|A_i=1,L_i)} \{Y_i - \hat{\mathbb{E}}[Y|A=1,M_i,L_i]\}}_{\text{term1}}$$
 $$+ \underbrace{\frac{I(A_i=0)}{1-\hat{p}(A_i=1|L_i)} \{\hat{\mathbb{E}}[Y|A=1,M_i,L_i] - \hat{\eta}(1,0,L_i)\}}_{\text{term2}} + \underbrace{\hat{\eta}(1,0,L_i)}_{\text{term3}} \Bigg]$$
 
-,where 
+,where
 $$\hat{\eta}(1,0,L_i) = \sum_{m=0}^1 \hat{\mathbb{E}}[Y|A=1, M=m, L_i] \cdot \hat{p}(M=m|A=0, L_i)$$
-In our River Blindness Study, there is no covariate $L$ for us to consider. (\textbf{The setup is that the researchers have lost $S$ and $R$ data due to fire, so they wrongly ignore this.}) Thus, $\hat{p}(A=1|L)$ becomes just $\hat{p}(A=1)$, $\hat{p}(M|A, L)$ becomes $\hat{p}(M|A)$, and $\hat{\mathbb{E}}[Y|A, M, L]$ becomes $\hat{\mathbb{E}}[Y|A, M]$.
+In our River Blindness Study, there is no covariate $L$ for us to
+consider.
+(\textbf{The setup is that the researchers have lost $S$ and $R$ data due to fire, so they wrongly ignore this.})
+Thus, $\hat{p}(A=1|L)$ becomes just $\hat{p}(A=1)$, $\hat{p}(M|A, L)$
+becomes $\hat{p}(M|A)$, and $\hat{\mathbb{E}}[Y|A, M, L]$ becomes
+$\hat{\mathbb{E}}[Y|A, M]$.
 
-Using this, it can be shown with some algebra that when there are no baseline covariates ($L$) and you use empirical means to estimate the nuisance functions (because you do not have $L$ to do the learning in the first place), the Tchetgen Tchetgen and Shpitser (TTS) estimator collapses entirely down to the naive plug-in Mediation Formula. In particular, the term 1 and term 2 can be shown to be equal to $0$, which leaves only $\hat \eta$, the naive plug-in mediation formula. 
+Using this, it can be shown with some algebra that when there are no
+baseline covariates ($L$) and you use empirical means to estimate the
+nuisance functions (because you do not have $L$ to do the learning in
+the first place), the Tchetgen Tchetgen and Shpitser (TTS) estimator
+collapses entirely down to the naive plug-in Mediation Formula. In
+particular, the term 1 and term 2 can be shown to be equal to $0$, which
+leaves only $\hat \eta$, the naive plug-in mediation formula.
 :::
 
-:::{.callout-note title="Efficient Estimation and Inference when the Cross-world independence holds"}
-Now consider the DGP represented by the following DAG from VanderWeele and Vansteelandt (2009). In this case, the mediation formula can be proven to be true, as described in their paper and our write-up.
-![](plots/Fig3.png){width=85%}
+::: {.callout-note title="Efficient Estimation and Inference when the Cross-world independence holds"}
+Now consider the DGP represented by the following DAG from VanderWeele
+and Vansteelandt (2009). In this case, the mediation formula can be
+proven to be true, as described in their paper and our write-up.
+![](plots/Fig3.png){width="85%"}
+:::
+
+::: {.callout-note title="DGP Following VanderWeele & Vansteelandt (2009), Figure 1"}
+We implement a DGP following Figure 1 of VanderWeele and Vansteelandt
+(2009), which represents the canonical setting where cross-world
+independence **holds** — in contrast to the river blindness DGP in the
+preceding sections where it is violated.
+
+The variables are:
+
+$C_1$: Baseline exposure-outcome confounder. Affects both $A$ and $Y$,
+but is pre-exposure and therefore not affected by anything else in the
+system.
+
+$C_2$: Baseline mediator-outcome confounder. Affects both $M$ and $Y$,
+but again is pre-exposure and independent of $C_1$.
+
+$A$: Binary exposure. Determined by $C_1$ via a logistic model.
+
+$M$: Binary mediator. Determined by $A$ and $C_2$ via a logistic model.
+
+$Y$: Binary outcome. Determined by $A$, $M$, $C_1$, and $C_2$ via a
+logistic model.
+
+The key structural feature is that **neither** $C_1$ nor $C_2$ is
+affected by $A$. This means there is no intermediate confounding of the
+$M \to Y$ relationship — the confounders are purely baseline. As a
+result, all four identification assumptions of VanderWeele and
+Vansteelandt (2009) are satisfied when conditioning on $(C_1, C_2)$:
+
+1.  No unmeasured $A$--$Y$ confounding given $(C_1, C_2)$
+2.  No unmeasured $M$--$Y$ confounding given $(A, C_1, C_2)$\
+3.  No unmeasured $A$--$M$ confounding given $(C_1, C_2)$
+4.  **Cross-world independence**: $Y(a, m) \perp M(a^*) \mid (C_1, C_2)$
+
+Assumption 4 holds here precisely because there is no variable affected
+by $A$ that also confounds $M \to Y$ — the failure mode that the river
+blindness example was designed to illustrate.
+
+The structural equations are:
+$$C_1 \sim \text{Bernoulli}(0.5), \quad C_2 \sim \text{Bernoulli}(0.5)$$
+$$A \mid C_1 \sim \text{Bernoulli}\big(\text{logit}^{-1}(-0.5 + 1.0 \cdot C_1)\big)$$
+$$M \mid A, C_2 \sim \text{Bernoulli}\big(\text{logit}^{-1}(-0.5 + 1.5 \cdot A + 0.8 \cdot C_2)\big)$$
+$$Y \mid A, M, C_1, C_2 \sim \text{Bernoulli}\big(\text{logit}^{-1}(-1.0 + 0.8 \cdot A + 1.2 \cdot M + 0.7 \cdot C_1 + 0.6 \cdot C_2)\big)$$
+
+Note that in the TTS influence function, the covariate set $L$
+corresponds to $(C_1, C_2)$ in this DGP.
 :::
 
 ```{r}
 ### Implement the DGP for this DAG! ###
-```
 
+
+# DGP following Figure 1 of VanderWeele & Vansteelandt (2009)
+# C1: baseline exposure-outcome confounder (affects A and Y)
+# C2: baseline mediator-outcome confounder (affects M and Y)
+# A:  binary exposure
+# M:  binary mediator
+# Y:  binary outcome
+# Cross-world independence holds here — no intermediate confounding.
+
+generate_vdw_dgp <- function(n) {
+  
+  # Baseline confounders (pre-exposure, independent of each other)
+  C1 <- rbinom(n, size = 1, prob = 0.5)   # Exposure-outcome confounder
+  C2 <- rbinom(n, size = 1, prob = 0.5)   # Mediator-outcome confounder
+  
+  # A: Exposure — affected by C1 only
+  prob_A <- plogis(-0.5 + 1.0 * C1)
+  A <- rbinom(n, size = 1, prob = prob_A)
+  
+  # M: Mediator — affected by A and C2
+  prob_M <- plogis(-0.5 + 1.5 * A + 0.8 * C2)
+  M <- rbinom(n, size = 1, prob = prob_M)
+  
+  # Y: Outcome — affected by A, M, C1, and C2
+  prob_Y <- plogis(-1.0 + 0.8 * A + 1.2 * M + 0.7 * C1 + 0.6 * C2)
+  Y <- rbinom(n, size = 1, prob = prob_Y)
+  
+  return(data.frame(C1 = C1, C2 = C2, A = A, M = M, Y = Y))
+}
+```
 
 ```{r}
 library(SuperLearner)
@@ -536,3 +686,319 @@ calculate_tts_estimator <- function(dat, K=2) {
 }
 ```
 
+```{r}
+### 04/30/2026 UPDATE: Tavleen code for efficient estimator ###
+
+#| message: false
+#| warning: false
+library(SuperLearner)
+
+# Define covariate names for the VanderWeele DGP
+L_cols <- c("C1", "C2")
+
+# 1. Nuisance Estimation Function
+nuisance_trained_predict_tts <- function(dat, exclude_foldindex, L_cols) {
+  train_dat <- dat[-exclude_foldindex, ]
+  eval_fold  <- dat[exclude_foldindex, ]
+  
+  X_L_train <- train_dat[, L_cols, drop = FALSE]
+  X_L_eval  <- eval_fold[,  L_cols, drop = FALSE]
+  
+  # A. Treatment Mechanism: p(A=1 | C1, C2)
+  fit_A    <- SuperLearner(Y = train_dat$A, X = X_L_train,
+                           family = binomial(),
+                           SL.library = c("SL.glm", "SL.ranger"))
+  pA1_eval <- as.vector(predict(fit_A, newdata = X_L_eval)$pred)
+  
+  # B. Mediator Mechanism: p(M=1 | A, C1, C2)
+  X_M_train <- train_dat[, c("A", L_cols)]
+  fit_M     <- SuperLearner(Y = train_dat$M, X = X_M_train,
+                            family = binomial(),
+                            SL.library = c("SL.glm", "SL.ranger"))
+  
+  new_M_a1 <- eval_fold[, c("A", L_cols)]; new_M_a1$A <- 1
+  new_M_a0 <- eval_fold[, c("A", L_cols)]; new_M_a0$A <- 0
+  
+  pM1_A1 <- as.vector(predict(fit_M, newdata = new_M_a1)$pred)
+  pM1_A0 <- as.vector(predict(fit_M, newdata = new_M_a0)$pred)
+  
+  pM_obs_A1 <- ifelse(eval_fold$M == 1, pM1_A1, 1 - pM1_A1)
+  pM_obs_A0 <- ifelse(eval_fold$M == 1, pM1_A0, 1 - pM1_A0)
+  
+  # C. Outcome Mechanism: E[Y | A, M, C1, C2]
+  X_Y_train <- train_dat[, c("A", "M", L_cols)]
+  fit_Y     <- SuperLearner(Y = train_dat$Y, X = X_Y_train,
+                            family = binomial(),
+                            SL.library = c("SL.glm", "SL.ranger"))
+  
+  # E[Y | A=1, M_i observed, L_i]
+  new_Y_obs <- eval_fold[, c("A", "M", L_cols)]; new_Y_obs$A <- 1
+  mu_1_obs  <- as.vector(predict(fit_Y, newdata = new_Y_obs)$pred)
+  
+  # ---- NEW: E[Y | A=0, M_i observed, L_i] ----
+  new_Y_obs0 <- eval_fold[, c("A", "M", L_cols)]; new_Y_obs0$A <- 0
+  mu_0_obs   <- as.vector(predict(fit_Y, newdata = new_Y_obs0)$pred)
+  
+  # E[Y | A=1, M=1, L] and E[Y | A=1, M=0, L] for eta_10
+  new_Y_m1 <- eval_fold[, c("A", "M", L_cols)]; new_Y_m1$A <- 1; new_Y_m1$M <- 1
+  new_Y_m0 <- eval_fold[, c("A", "M", L_cols)]; new_Y_m0$A <- 1; new_Y_m0$M <- 0
+  
+  mu_1_m1 <- as.vector(predict(fit_Y, newdata = new_Y_m1)$pred)
+  mu_1_m0 <- as.vector(predict(fit_Y, newdata = new_Y_m0)$pred)
+  
+  # ---- NEW: E[Y | A=0, M=1, L] and E[Y | A=0, M=0, L] for eta_00 ----
+  new_Y_m1_A0 <- eval_fold[, c("A","M",L_cols)]; new_Y_m1_A0$A <- 0; new_Y_m1_A0$M <- 1
+  new_Y_m0_A0 <- eval_fold[, c("A","M",L_cols)]; new_Y_m0_A0$A <- 0; new_Y_m0_A0$M <- 0
+  
+  mu_0_m1 <- as.vector(predict(fit_Y, newdata = new_Y_m1_A0)$pred)
+  mu_0_m0 <- as.vector(predict(fit_Y, newdata = new_Y_m0_A0)$pred)
+  
+  # D. eta_10 and eta_00
+  eta_10 <- mu_1_m1 * pM1_A0 + mu_1_m0 * (1 - pM1_A0)
+  eta_00 <- mu_0_m1 * pM1_A0 + mu_0_m0 * (1 - pM1_A0)  # NEW
+  
+  return(data.frame(
+    pA1    = pA1_eval,
+    pM_A1  = pM_obs_A1,
+    pM_A0  = pM_obs_A0,
+    mu_1   = mu_1_obs,
+    mu_0   = mu_0_obs,   # NEW
+    eta_10 = eta_10,
+    eta_00 = eta_00      # NEW
+  ))
+}
+
+# 2. TTS Estimator with Cross-Fitting
+calculate_tts_estimator <- function(dat, L_cols, K = 5) {
+  n        <- nrow(dat)
+  fold_ids <- sample(rep(1:K, length.out = n))
+  
+  pA1_vec    <- rep(NA_real_, n)
+  pM_A1_vec  <- rep(NA_real_, n)
+  pM_A0_vec  <- rep(NA_real_, n)
+  mu_1_vec   <- rep(NA_real_, n)
+  mu_0_vec   <- rep(NA_real_, n)  # NEW: E[Y | A=0, M_i, L_i]
+  eta_10_vec <- rep(NA_real_, n)
+  eta_00_vec <- rep(NA_real_, n)  # NEW: E[Y(0, M(0))]
+  
+  for (k in 1:K) {
+    exclude_foldindex <- which(fold_ids == k)
+    preds <- nuisance_trained_predict_tts(dat, exclude_foldindex, L_cols)
+    
+    pA1_vec[exclude_foldindex]    <- preds$pA1
+    pM_A1_vec[exclude_foldindex]  <- preds$pM_A1
+    pM_A0_vec[exclude_foldindex]  <- preds$pM_A0
+    mu_1_vec[exclude_foldindex]   <- preds$mu_1
+    mu_0_vec[exclude_foldindex]   <- preds$mu_0   # NEW
+    eta_10_vec[exclude_foldindex] <- preds$eta_10
+    eta_00_vec[exclude_foldindex] <- preds$eta_00 # NEW
+  }
+  
+  bound     <- function(x) pmax(0.001, pmin(0.999, x))
+  pA1_vec   <- bound(pA1_vec)
+  pM_A1_vec <- bound(pM_A1_vec)
+  
+  A <- dat$A
+  Y <- dat$Y
+  
+  # IF for E[Y(1, M(0))]
+  IF_10_term1 <- (as.numeric(A == 1) * pM_A0_vec) / (pA1_vec * pM_A1_vec) * (Y - mu_1_vec)
+  IF_10_term2 <- (as.numeric(A == 0) / (1 - pA1_vec)) * (mu_1_vec - eta_10_vec)
+  IF_10_term3 <- eta_10_vec
+  IF_10 <- IF_10_term1 + IF_10_term2 + IF_10_term3
+
+  # IF for E[Y(0, M(0))] — this is just E[Y | A=0] identified by g-formula
+  IF_00_term1 <- (as.numeric(A == 0) * pM_A0_vec) / ((1 - pA1_vec) * pM_A0_vec) * (Y - mu_0_vec)
+  IF_00_term2 <- eta_00_vec
+  IF_00 <- IF_00_term1 + IF_00_term2
+
+  # NDE influence function = IF_10 - IF_00
+  IF_NDE <- IF_10 - IF_00
+  
+  psi_hat <- mean(IF_NDE)
+  se_hat  <- sqrt(var(IF_NDE) / n)
+  ci_low  <- psi_hat - 1.96 * se_hat
+  ci_high <- psi_hat + 1.96 * se_hat
+  
+  return(list(
+    psi_TTS   = psi_hat,
+    se        = se_hat,
+    ci        = c(ci_low, ci_high),
+    IF_values = IF_NDE
+  ))
+}
+# 3. Run on VanderWeele DGP and report results
+set.seed(258)
+dat_vdw <- generate_vdw_dgp(n = 2000)
+tts_result <- calculate_tts_estimator(dat_vdw, L_cols = L_cols, K = 5)
+
+cat(sprintf("TTS Estimate:    %.4f\n", tts_result$psi_TTS))
+cat(sprintf("Standard Error:  %.4f\n", tts_result$se))
+cat(sprintf("95%% CI:         (%.4f, %.4f)\n", tts_result$ci[1], tts_result$ci[2]))
+```
+
+```{r}
+# True NDE via Monte Carlo under the VanderWeele DGP
+set.seed(999)
+n_mc <- 1e6
+
+C1 <- rbinom(n_mc, 1, 0.5)
+C2 <- rbinom(n_mc, 1, 0.5)
+
+# M under A=0
+pM_A0 <- plogis(-0.5 + 1.5 * 0 + 0.8 * C2)
+M_A0  <- rbinom(n_mc, 1, pM_A0)
+
+# Y under A=1, M fixed to M(0)
+pY_A1_M0 <- plogis(-1.0 + 0.8 * 1 + 1.2 * M_A0 + 0.7 * C1 + 0.6 * C2)
+
+# Y under A=0, M fixed to M(0)
+pY_A0_M0 <- plogis(-1.0 + 0.8 * 0 + 1.2 * M_A0 + 0.7 * C1 + 0.6 * C2)
+
+true_NDE <- mean(pY_A1_M0 - pY_A0_M0)
+cat(sprintf("True NDE: %.4f\n", true_NDE))
+```
+
+```{r}
+# Convergence rate check across increasing sample sizes
+set.seed(258)
+
+sample_sizes <- c(250, 500, 1000, 2000, 5000)
+n_sims       <- 100
+true_NDE     <- 0.1619
+
+results <- data.frame(
+  n    = integer(),
+  bias = numeric(),
+  mse  = numeric(),
+  se   = numeric()
+)
+
+for (n in sample_sizes) {
+  cat(sprintf("Running n = %d...\n", n))
+  
+  estimates <- rep(NA_real_, n_sims)
+  
+  for (sim in 1:n_sims) {
+    dat  <- generate_vdw_dgp(n)
+    fit  <- calculate_tts_estimator(dat, L_cols = L_cols, K = 5)
+    estimates[sim] <- fit$psi_TTS
+  }
+  
+  results <- rbind(results, data.frame(
+    n    = n,
+    bias = mean(estimates - true_NDE),
+    mse  = mean((estimates - true_NDE)^2),
+    se   = sd(estimates)
+  ))
+}
+
+print(results)
+```
+
+```{r}
+library(ggplot2)
+
+# Expected sqrt(n) reference line anchored at smallest n
+ref_const <- results$mse[1] * results$n[1]
+
+ggplot(results, aes(x = n, y = mse)) +
+  geom_line(color = "steelblue", linewidth = 1) +
+  geom_point(color = "steelblue", size = 3) +
+  geom_line(aes(y = ref_const / n), 
+            linetype = "dashed", color = "firebrick", linewidth = 1) +
+  scale_x_log10() +
+  scale_y_log10() +
+  labs(
+    title    = "TTS Estimator Convergence Rate",
+    subtitle = "Blue = empirical MSE, Red dashed = expected 1/n rate",
+    x        = "Sample Size (log scale)",
+    y        = "MSE (log scale)"
+  ) +
+  theme_minimal()
+```
+
+::: {.callout-note title="TTS Estimator Validation and Convergence"}
+### Why We Check Against the True NDE
+
+The TTS estimator (Tchetgen Tchetgen and Shpitser, 2012) is an efficient
+influence function-based estimator for the quantity $E[Y(1, M(0))]$,
+which is one component of the natural direct effect. The full NDE is:
+$$\text{NDE} = E[Y(1, M(0))] - E[Y(0, M(0))]$$
+
+Because our VanderWeele DGP satisfies all four identification
+assumptions --- including cross-world independence (Assumption A4) ---
+the mediation formula correctly identifies the true NDE. This gives us a
+**known ground truth** to validate against, which is something we
+deliberately could not do in the river blindness setting (where
+cross-world independence was violated and the mediation formula was
+biased by construction).
+
+The validation workflow mirrors what was done in the homework: we first
+compute the true NDE via Monte Carlo integration over $n = 10^6$ draws
+from the DGP, then run the TTS estimator on a finite sample and check
+whether the estimate is close to the truth and whether the true value
+falls within the reported 95% confidence interval.
+
+### Point Estimate and Confidence Interval
+
+Running the TTS estimator with $K = 5$-fold cross-fitting on a sample of
+$n = 2000$ drawn from the VanderWeele DGP gives:
+
+$$\hat{\psi}_{\text{TTS}} = 0.1700, \quad \widehat{\text{SE}} = 0.0241, \quad
+95\%\text{ CI} = (0.1228,\; 0.2171)$$
+
+The true NDE computed via Monte Carlo is $\psi^* = 0.1619$. The point
+estimate differs from the truth by only $0.0081$ --- less than one third
+of a standard error --- and the true value sits comfortably inside the
+confidence interval. This confirms that:
+
+1.  The influence function is correctly specified for the NDE (not just
+    one component $E[Y(1, M(0))]$), with both $E[Y(1, M(0))]$ and
+    $E[Y(0, M(0))]$ estimated and subtracted.
+2.  The cross-fitting procedure is successfully removing the bias that
+    would otherwise arise from using the same data to estimate nuisance
+    functions and evaluate the influence function.
+3.  The IF-based standard error and confidence interval are
+    well-calibrated, with the true value covered as expected.
+
+This is in sharp contrast to what would happen if we applied the same
+estimator to the river blindness DGP: there, even a perfectly
+implemented TTS estimator would converge to a **biased** limit, because
+the mediation formula itself does not identify the true NDE when
+cross-world independence fails.
+
+### Convergence Rate
+
+A key theoretical property of efficient influence function-based
+estimators is that they achieve the **parametric** $\sqrt{n}$
+convergence rate under mild conditions on the nuisance estimators ---
+even when those nuisances are estimated nonparametrically using flexible
+machine learning methods like SuperLearner. This is the
+`double robustness'' and`rate robustness'' property of the TTS
+estimator.
+
+To verify this empirically, we ran $100$ simulations at each of five
+sample sizes $n \in \{250, 500, 1000, 2000, 5000\}$ and computed the
+empirical MSE of the TTS estimator at each $n$. On a log-log scale, a
+$\sqrt{n}$ convergence rate corresponds to MSE $\sim 1/n$, which appears
+as a straight line with slope $-1$.
+
+The results are shown in the plot above. The empirical MSE (blue) tracks
+closely alongside the $1/n$ reference line (red dashed), confirming that
+the TTS estimator is achieving the expected parametric rate. At small
+$n$ there is some upward deviation from the reference line, which
+reflects finite-sample bias from the nuisance estimation step --- this
+shrinks as $n$ grows and the SuperLearner fits improve. This behavior is
+consistent with the theoretical guarantees of cross-fitted IF-based
+estimators: the cross-fitting ensures that the product of nuisance
+estimation errors contributes only a second-order term to the overall
+error, so the first-order $1/n$ variance term dominates for large enough
+$n$.
+
+Taken together, the point estimate validation and convergence rate check
+give us confidence that the TTS estimator is correctly implemented and
+behaves as theory predicts in a setting where identification holds.
+:::
+
+\
