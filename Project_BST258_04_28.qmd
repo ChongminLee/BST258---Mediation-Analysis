@@ -1,6 +1,6 @@
 ---
 title: "Project_BST258"
-format: html
+format: pdf
 editor: 
   markdown: 
     wrap: 72
