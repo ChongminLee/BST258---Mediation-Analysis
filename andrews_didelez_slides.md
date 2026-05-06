@@ -130,7 +130,7 @@ They compute Pearl's g-formula and compare to the true NDE over 327,680
 parameter settings:
 
 | Outcome | Bias range | Max relative bias |
-|------------------|--------------------|----------------------------------|
+|----|----|----|
 | Continuous $Y$ | $-3.3$ to $+3.3$ SD | Driven by 3-way interaction $\beta_5$ |
 | Binary $Y$ ($\beta_5 \neq 0$) | $-0.04$ to $+0.04$ | Up to **70%** |
 
@@ -143,14 +143,3 @@ parameter settings:
 — it can produce substantial bias in realistic settings.
 
 ------------------------------------------------------------------------
-
-## Positioning in the Chronological Story
-
-| Paper | What they do |
-|--------------------------|----------------------------------------------|
-| Baron & Kenny (1986) | Regression procedure — no causal framework, assumptions implicit |
-| Robins & Greenland (1992) | Counterfactual framework — nonidentifiability even under randomization |
-| Pearl (2001) | NPSEM-IE — cross-world independence as structural consequence |
-| VanderWeele & Vansteelandt (2009) | Make A1–A4 explicit, note A4 is problematic |
-| **Andrews & Didelez (2020)** | **Show A4 can fail without** $L$; catalogue alternatives |
-| Robins, Richardson & Shpitser (2022) | Abandon cross-world entirely — separable/interventionist effects |

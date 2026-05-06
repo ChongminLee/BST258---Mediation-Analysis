@@ -1,7 +1,11 @@
 ---
-## Baron and Kenny (1986)
-### The Foundational Regression-Based Approach
+output:
+  html_document: default
+  pdf_document: default
 ---
+
+## Baron and Kenny (1986)
+## The Foundational Regression-Based Approach
 
 ## Why Mediation?
 
@@ -84,14 +88,3 @@ The 1986 paper is one of the **most cited papers in all of social science** for 
 **4. No discussion of identifiability:** Whether direct and indirect effects can even be recovered from data — even in a randomized trial — is never raised.
 
 ------------------------------------------------------------------------
-
-## The Bridge to What Follows
-
-These silent assumptions are precisely what the later literature attacks:
-
--   **Robins & Greenland (1992):** show that stratifying on $M$ is biased even under randomization — the nonidentifiability problem Baron & Kenny never asked
--   **Pearl (2001):** provides formal counterfactual definitions — CDE and NDE — that give mediation estimands rigorous causal meaning
--   **VanderWeele & Vansteelandt (2009):** make the no-interaction and no-confounding assumptions explicit as A1–A4
--   **Andrews & Didelez (2020):** show cross-world independence can fail even without the confounding structures Baron & Kenny never considered
-
-Baron & Kenny is a special case of all these frameworks — **valid only under strong parametric and no-confounding assumptions that must be explicitly defended.**
